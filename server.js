@@ -1,7 +1,6 @@
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
-// const dotenv = require('dotenv');
 import dotenv from "dotenv";
 import routes from "./src/routes/routes.js";
 
@@ -11,8 +10,16 @@ const app = express();
 
 app.use(express.json());
 
+const allowedOrigins = ["https://lms-obc.netlify.app", "http://localhost:3000"];
+
 const corsOptions = {
-  origin: ["http://localhost:3000", "https://lms-obc.netlify.app/"],
+  origin: (origin, callback) => {
+    if (allowedOrigins.includes(origin) || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true,
 };
 
