@@ -12,7 +12,7 @@ const app = express();
 app.use(express.json());
 
 const corsOptions = {
-  origin: '*',
+  origin: ["http://localhost:3000", "https://lms-obc.netlify.app/"],
   credentials: true,
 };
 
