@@ -7,9 +7,5 @@ export default function feedbackRoutes(app) {
     authenticateJWT,
     feedbackController.submitFeedback
   );
-  app.get(
-    "/api/feedback/:courseId",
-    authenticateJWT,
-    feedbackController.getAllCourseFeedback
-  );
+  app.get("/api/feedback/:courseId", feedbackController.getAllCourseFeedback);
 }

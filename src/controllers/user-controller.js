@@ -1,16 +1,31 @@
 import bcrypt from "bcrypt";
 import User from "../models/user.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 class UserController {
   createUser = async (req, res) => {
-    const { name, email, password } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const { first_name, last_name, email, password, password_confirmation } =
+      req.body;
 
-    const newUser = new User({ name, email, password: hashedPassword });
+    if (password !== password_confirmation) {
+      return res
+        .status(400)
+        .json({ message: "Password confirmation must match password." });
+    }
 
     try {
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const newUser = new User({
+        first_name,
+        last_name,
+        email,
+        password: hashedPassword,
+      });
+
       await newUser.save();
+
       res.status(201).json({ message: "User registered", user: newUser });
     } catch (err) {
       res.status(400).json({ message: "Error registering user", error: err });
@@ -33,6 +48,22 @@ class UserController {
     });
 
     res.json({ message: "Logged in successfully", user, token });
+  };
+
+   getUserById = async (req, res) => {
+    const { userId } = req.params;
+  
+    try {
+      const user = await User.findById(userId);
+  
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+  
+      res.json({ user });
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
   };
 }
 

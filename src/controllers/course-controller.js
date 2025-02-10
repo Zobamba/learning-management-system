@@ -3,10 +3,13 @@ import User from "../models/user.js";
 
 class CourseController {
   createCourse = async (req, res) => {
-    const { title, description, content } = req.body;
+    const { title, description, category, image, rating, content } = req.body;
     const newCourse = new Course({
       title,
       description,
+      category,
+      image,
+      rating,
       created_by: req.user.id,
       content,
     });
@@ -24,7 +27,28 @@ class CourseController {
 
   getAllCourses = async (req, res) => {
     try {
-      const courses = await Course.find().populate("created_by", "name email");
+      const { category, search } = req.query;
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit);
+      const skip = (page - 1) * limit;
+
+      const query = {};
+
+      if (category) {
+        query.category = category;
+      }
+
+      if (search) {
+        query.$or = [
+          { title: { $regex: search, $options: "i" } },
+          { description: { $regex: search, $options: "i" } },
+        ];
+      }
+
+      const courses = await Course.find(query)
+        .populate("created_by", "name email")
+        .skip(skip)
+        .limit(limit);
 
       if (!courses || courses.length === 0) {
         return res.status(404).json({ message: "No courses found" });
@@ -37,6 +61,27 @@ class CourseController {
     } catch (error) {
       res.status(500).json({
         message: "Error fetching courses",
+        error: error.message,
+      });
+    }
+  };
+
+  getCourseById = async (req, res) => {
+    try {
+      const { courseId } = req.params;
+      const course = await Course.findById(courseId);
+
+      if (!course) {
+        return res.status(404).json({ message: "course not found" });
+      }
+
+      res.status(200).json({
+        message: "Course retrieved successfully",
+        data: course,
+      });
+    } catch (error) {
+      res.status(500).json({
+        message: "Error fetching course",
         error: error.message,
       });
     }
@@ -103,17 +148,21 @@ class CourseController {
   };
 
   getCourseProgress = async (req, res) => {
-    // const { courseId } = req.params;
+    try {
+      const user = await User.findById(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
 
-    const user = await User.findById(req.user.id);
-    if (!user) return res.status(404).json({ message: "User not found" });
+      const progress = user.progress;
+      if (!progress || progress.length === 0) {
+        return res.status(404).json({ message: "Progress not found" });
+      }
 
-    const progress = user.progress
-
-    if (!progress)
-      return res.status(404).json({ message: "Progress not found" });
-
-    res.json({ progress });
+      res.status(200).json({ progress });
+    } catch (error) {
+      res.status(500).json({ message: "Server error", error: error.message });
+    }
   };
 }
 

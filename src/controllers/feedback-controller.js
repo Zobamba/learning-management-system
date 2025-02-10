@@ -19,7 +19,6 @@ class FeedbackController {
         feedback: newFeedback,
       });
     } catch (error) {
-      console.error(error);
       res.status(500).json({ message: "Error creating feedback", error: err });
     }
   };
@@ -31,7 +30,6 @@ class FeedbackController {
       const courseFeedbacks = await Feedback.find({ course_id: courseId });
       res.status(200).json({ courseFeedbacks });
     } catch (error) {
-      console.error(error);
       res
         .status(500)
         .json({ message: "Error fetching course feedback", error: err });
